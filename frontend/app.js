@@ -1,4 +1,24 @@
 let token = null;
+let currentUsername = '';
+
+function toast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const div = document.createElement('div');
+  const colors = { info: '#3a7bd5', success: '#2ed573', error: '#ff4757' };
+  div.style.cssText = `
+    background: rgba(0,0,0,0.85);
+    color: ${colors[type] || colors.info};
+    border: 1px solid ${colors[type] || colors.info};
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease-in;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  `;
+  div.textContent = message;
+  container.appendChild(div);
+  setTimeout(() => { div.style.opacity = '0'; div.style.transition = 'opacity 0.3s'; setTimeout(() => div.remove(), 300); }, 3000);
+}
 
 function showLogin(e) {
   e.preventDefault();
@@ -14,11 +34,23 @@ function showRegister(e) {
   document.getElementById('app-section').style.display = 'none';
 }
 
+function setAuthUI() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('register-section').style.display = 'none';
+  document.getElementById('app-section').style.display = 'block';
+  document.getElementById('user-info').style.display = 'block';
+  document.getElementById('display-username').textContent = currentUsername;
+}
+
 function logout() {
   token = null;
+  currentUsername = '';
   localStorage.removeItem('token');
+  localStorage.removeItem('username');
   document.getElementById('app-section').style.display = 'none';
+  document.getElementById('user-info').style.display = 'none';
   document.getElementById('auth-section').style.display = 'block';
+  toast('Logged out', 'info');
 }
 
 async function login(e) {
@@ -26,7 +58,10 @@ async function login(e) {
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
   const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
   errorEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Logging in...';
 
   try {
     const res = await fetch('/api/auth/login', {
@@ -37,11 +72,13 @@ async function login(e) {
     const data = await res.json();
     if (res.ok) {
       token = data.token;
+      currentUsername = username;
       localStorage.setItem('token', token);
-      document.getElementById('auth-section').style.display = 'none';
-      document.getElementById('app-section').style.display = 'block';
+      localStorage.setItem('username', username);
+      setAuthUI();
       loadMessages();
       checkStatus();
+      toast('Welcome back!', 'success');
     } else {
       errorEl.textContent = data.error || 'Login failed';
       errorEl.style.display = 'block';
@@ -49,6 +86,9 @@ async function login(e) {
   } catch (err) {
     errorEl.textContent = 'Server error';
     errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Log In';
   }
 }
 
@@ -57,7 +97,10 @@ async function register(e) {
   const username = document.getElementById('reg-username').value.trim();
   const password = document.getElementById('reg-password').value;
   const errorEl = document.getElementById('reg-error');
+  const btn = document.getElementById('reg-btn');
   errorEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Registering...';
 
   try {
     const res = await fetch('/api/auth/register', {
@@ -67,9 +110,8 @@ async function register(e) {
     });
     const data = await res.json();
     if (res.ok) {
-      errorEl.textContent = 'Account created! Please log in.';
-      errorEl.style.display = 'block';
-      setTimeout(() => showLogin(e), 1000);
+      toast('Account created! Please log in.', 'success');
+      setTimeout(() => showLogin(e), 1500);
     } else {
       errorEl.textContent = data.error || 'Registration failed';
       errorEl.style.display = 'block';
@@ -77,6 +119,9 @@ async function register(e) {
   } catch (err) {
     errorEl.textContent = 'Server error';
     errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Register';
   }
 }
 
@@ -106,8 +151,10 @@ async function sendMessage(e) {
   const input = document.getElementById('message-input');
   const text = input.value.trim();
   if (!text || !token) return;
-  const btn = input.parentElement.querySelector('button');
+  const btn = document.getElementById('btn-submit');
+  const spinner = document.getElementById('btn-spinner');
   btn.disabled = true;
+  spinner.style.display = 'inline-block';
   try {
     const res = await fetch('/api/messages', {
       method: 'POST',
@@ -115,13 +162,15 @@ async function sendMessage(e) {
       body: JSON.stringify({ text })
     });
     const data = await res.json();
-    if (data.error) { showError(data.error); return; }
+    if (data.error) { toast(data.error, 'error'); return; }
     addMessage(data.text || data.message);
     input.value = '';
+    toast('Message sent!', 'success');
   } catch (err) {
-    showError('Failed to send message');
+    toast('Failed to send message', 'error');
   } finally {
     btn.disabled = false;
+    spinner.style.display = 'none';
   }
 }
 
@@ -135,7 +184,7 @@ async function loadMessages() {
     const messages = await res.json();
     messages.forEach(m => addMessage(m.text || m.message));
   } catch (err) {
-    showError('Could not load messages');
+    toast('Could not load messages', 'error');
   }
 }
 
@@ -147,21 +196,16 @@ function addMessage(text) {
   list.appendChild(div);
 }
 
-function showError(msg) {
-  const list = document.getElementById('message-list');
-  const div = document.createElement('div');
-  div.className = 'msg error';
-  div.textContent = '⚠️ ' + msg;
-  list.appendChild(div);
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   const savedToken = localStorage.getItem('token');
-  if (savedToken) {
+  const savedUsername = localStorage.getItem('username');
+  if (savedToken && savedUsername) {
     token = savedToken;
-    document.getElementById('app-section').style.display = 'block';
+    currentUsername = savedUsername;
+    setAuthUI();
     loadMessages();
     checkStatus();
+    toast('Session restored!', 'info');
   } else {
     document.getElementById('auth-section').style.display = 'block';
   }

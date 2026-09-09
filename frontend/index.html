@@ -11,14 +11,18 @@
     <header>
       <h1>Fullstack App</h1>
       <p>Multi-language project with frontend and backend</p>
+      <div id="user-info" style="display:none; margin-top:12px;">
+        <span style="color:#00d2ff; font-weight:600;" id="display-username"></span>
+        <button onclick="logout()" style="font-size:0.8rem; padding:4px 12px; margin-left:12px;">Logout</button>
+      </div>
     </header>
     <main>
-      <section id="auth-section" style="display:none;">
+      <section id="auth-section">
         <h2>Welcome Back</h2>
         <form id="login-form" onsubmit="login(event)">
           <input type="text" id="login-username" placeholder="Username" required>
           <input type="password" id="login-password" placeholder="Password" required>
-          <button type="submit">Log In</button>
+          <button type="submit" id="login-btn">Log In</button>
         </form>
         <p id="login-error" style="color:#ff4757;margin-top:8px;display:none;"></p>
         <p style="margin-top:16px;color:#888;">Don't have an account? <a href="#" onclick="showRegister(event)">Register</a></p>
@@ -28,7 +32,7 @@
         <form id="register-form" onsubmit="register(event)">
           <input type="text" id="reg-username" placeholder="Choose a username (min 3 chars)" required>
           <input type="password" id="reg-password" placeholder="Choose a password (min 6 chars)" required>
-          <button type="submit">Register</button>
+          <button type="submit" id="reg-btn">Register</button>
         </form>
         <p id="reg-error" style="color:#ff4757;margin-top:8px;display:none;"></p>
         <p style="margin-top:16px;color:#888;">Already have an account? <a href="#" onclick="showLogin(event)">Log In</a></p>
@@ -40,11 +44,13 @@
           <button id="btn-status" onclick="checkStatus()">Check Server</button>
         </section>
         <section class="messages">
-          <h2>Messages <span style="font-size:0.8rem;color:#888;"><button onclick="logout()" style="font-size:0.8rem;padding:4px 12px;">Logout</button></span></h2>
+          <h2>Messages</h2>
+          <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
           <div id="message-list"></div>
           <form id="message-form" onsubmit="sendMessage(event)">
             <input type="text" id="message-input" placeholder="Type a message..." required>
             <button type="submit" id="btn-submit">Send</button>
+            <span id="btn-spinner" class="spinner" style="display:none;"></span>
           </form>
         </section>
       </section>
