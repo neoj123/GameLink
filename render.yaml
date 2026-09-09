@@ -1,0 +1,22 @@
+services:
+  web:
+    type: web
+    build:
+      dockerfile: Dockerfile
+    env:
+      - NODE_ENV=production
+      - PORT=3000
+    plan: starter
+    auto_deploy: true
+    branches:
+      - main
+    healthcheck:
+      path: /api/status
+      interval: 30
+      timeout: 5
+      retries: 3
+    env:
+      DATABASE_URL:
+        description: "SQLite database path"
+      JWT_SECRET:
+        description: "JWT signing secret"

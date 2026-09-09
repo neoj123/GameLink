@@ -10,3 +10,8 @@ coverage/
 npm-debug.log*
 .vscode/
 .idea/
+.db/
+*.db
+*.sqlite
+sqlite-data
+.github/
