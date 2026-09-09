@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const db = require('./db');
 const { router } = require('./routes/api');
 const { router: authRouter } = require('./auth/auth');
+const { router: adminRouter } = require('./routes/admin');
 const { apiLimiter } = require('./middleware/rateLimit');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { validateEnvironment } = require('./middleware/errorHandler');
@@ -25,6 +26,7 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 app.use('/api/auth', authRouter);
 app.use('/api', router);
+app.use('/api/admin', adminRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', uptime: process.uptime() });

@@ -87,6 +87,26 @@ function connectSocket() {
   });
 }
 
+function renderMarkdown(text) {
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/`{3}(\n|[\s\S]*?)`{3}/g, '<pre><code>$1</code></pre>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)+/g, '<ul>$&</ul>')
+    .replace(/\n/g, '<br>');
+}
+
+function formatTime(isoString) {
+  return new Date(isoString).toLocaleString();
+}
+
+function isAdmin() {
+  return currentUsername?.toLowerCase() === 'admin' || currentUsername?.toLowerCase() === 'root';
+}
+
 async function login(e) {
   e.preventDefault();
   const username = document.getElementById('login-username').value.trim();
@@ -114,6 +134,9 @@ async function login(e) {
       checkStatus();
       connectSocket();
       toast('Welcome back!', 'success');
+      if (isAdmin()) {
+        document.getElementById('admin-panel').style.display = 'block';
+      }
     } else {
       errorEl.textContent = data.error || 'Login failed';
       errorEl.style.display = 'block';
@@ -239,7 +262,7 @@ async function searchMessages(e) {
       results.forEach(m => {
         const div = document.createElement('div');
         div.className = 'msg';
-        div.textContent = m.text;
+        div.innerHTML = renderMarkdown(m.text);
         resultsDiv.appendChild(div);
       });
       if (results.length === 0) {
@@ -259,8 +282,52 @@ function addMessage(text) {
   const list = document.getElementById('message-list');
   const div = document.createElement('div');
   div.className = 'msg';
-  div.textContent = text;
+  div.innerHTML = renderMarkdown(text);
   list.appendChild(div);
+}
+
+async function loadAdminUsers() {
+  if (!isAdmin()) return;
+  const content = document.getElementById('admin-content');
+  content.innerHTML = '<p style="color:#888;">Loading users...</p>';
+  try {
+    const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+    const data = await res.json();
+    if (data.users) {
+      let html = '<table style="width:100%; border-collapse:collapse; margin-top:8px;"><tr style="border-bottom:2px solid #3a7bd5;"><th style="text-align:left; padding:8px;">ID</th><th style="text-align:left; padding:8px;">Username</th><th style="text-align:left; padding:8px;">Created</th></tr>';
+      data.users.forEach(u => {
+        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:8px;">${u.id}</td><td style="padding:8px;">${u.username}</td><td style="padding:8px;">${formatTime(u.created_at)}</td></tr>`;
+      });
+      html += '</table>';
+      if (data.pagination && data.pagination.totalPages > 1) {
+        html += `<p style="margin-top:8px; color:#888;">Page ${data.pagination.page} of ${data.pagination.totalPages} (${data.pagination.total} users)</p>`;
+      }
+      content.innerHTML = html;
+    }
+  } catch (err) {
+    toast('Failed to load users', 'error');
+  }
+}
+
+async function loadNotifications() {
+  if (!isAdmin()) return;
+  const content = document.getElementById('admin-content');
+  content.innerHTML = '<p style="color:#888;">Loading notifications...</p>';
+  try {
+    const res = await fetch('/api/admin/notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+    const data = await res.json();
+    if (data.notifications && data.notifications.length > 0) {
+      let html = '';
+      data.notifications.forEach(n => {
+        html += `<div class="msg"><strong>#${n.id}</strong> ${renderMarkdown(n.text)} <span style="color:#888; font-size:0.8rem;">— ${formatTime(n.timestamp)}</span></div>`;
+      });
+      content.innerHTML = html;
+    } else {
+      content.innerHTML = '<p style="color:#888;">No notifications</p>';
+    }
+  } catch (err) {
+    toast('Failed to load notifications', 'error');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -274,6 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
     checkStatus();
     connectSocket();
     toast('Session restored!', 'info');
+    if (isAdmin()) {
+      document.getElementById('admin-panel').style.display = 'block';
+    }
   } else {
     document.getElementById('auth-section').style.display = 'block';
   }

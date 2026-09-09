@@ -50,7 +50,7 @@
           <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
           <div id="message-list"></div>
           <form id="message-form" onsubmit="sendMessage(event)">
-            <input type="text" id="message-input" placeholder="Type a message..." required>
+            <input type="text" id="message-input" placeholder="Type a message or use **bold**, _italic_, - list, `code`..." required>
             <button type="submit" id="btn-submit">Send</button>
             <span id="btn-spinner" class="spinner" style="display:none;"></span>
           </form>
@@ -62,6 +62,13 @@
             <button type="submit">Search</button>
           </form>
           <div id="search-results" style="margin-top:12px;"></div>
+        </section>
+        <section id="admin-panel" style="display:none;">
+          <h2>Admin Dashboard</h2>
+          <p id="admin-info" style="color:#888;"></p>
+          <button onclick="loadAdminUsers()" style="margin-bottom:12px;">View All Users</button>
+          <button onclick="loadNotifications()" style="margin-bottom:12px; margin-left:8px;">Notifications</button>
+          <div id="admin-content"></div>
         </section>
       </section>
     </main>
