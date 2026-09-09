@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fullstack App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Fullstack App</h1>
+      <p>Multi-language project with frontend and backend</p>
+    </header>
+    <main>
+      <section class="status">
+        <h2>Backend Status</h2>
+        <p id="server-status">Checking...</p>
+        <button id="btn-status" onclick="checkStatus()">Check Server</button>
+      </section>
+      <section class="messages">
+        <h2>Messages</h2>
+        <div id="message-list"></div>
+        <form id="message-form" onsubmit="sendMessage(event)">
+          <input type="text" id="message-input" placeholder="Type a message..." required>
+          <button type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
