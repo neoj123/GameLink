@@ -10,19 +10,22 @@ function showError(msg) {
 
 async function checkStatus() {
   const btn = document.getElementById('btn-status');
+  const dot = document.getElementById('status-dot');
   btn.disabled = true;
-  btn.textContent = 'Checking...';
+  dot.className = 'status-indicator';
   try {
     const res = await fetch('/api/status');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    document.getElementById('server-status').textContent =
-      `✅ ${data.status} — ${new Date(data.time).toLocaleTimeString()}`;
+    dot.className = 'status-indicator online';
+    document.getElementById('server-status').innerHTML =
+      `${dot.outerHTML}✅ ${data.status} — ${new Date(data.time).toLocaleTimeString()}`;
   } catch (err) {
-    document.getElementById('server-status').textContent = '❌ Server unreachable';
+    dot.className = 'status-indicator offline';
+    document.getElementById('server-status').innerHTML =
+      `${dot.outerHTML}❌ Server unreachable`;
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Check Server';
   }
 }
 

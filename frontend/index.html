@@ -15,7 +15,7 @@
     <main>
       <section class="status">
         <h2>Backend Status</h2>
-        <p id="server-status">Checking...</p>
+        <p id="server-status"><span class="status-indicator offline" id="status-dot"></span>Checking...</p>
         <button id="btn-status" onclick="checkStatus()">Check Server</button>
       </section>
       <section class="messages">
@@ -23,7 +23,7 @@
         <div id="message-list"></div>
         <form id="message-form" onsubmit="sendMessage(event)">
           <input type="text" id="message-input" placeholder="Type a message..." required>
-          <button type="submit">Send</button>
+          <button type="submit" id="btn-submit">Send</button>
         </form>
       </section>
     </main>
