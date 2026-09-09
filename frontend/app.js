@@ -1,5 +1,6 @@
 let token = null;
 let currentUsername = '';
+let socket = null;
 
 function toast(message, type = 'info') {
   const container = document.getElementById('toast-container');
@@ -47,10 +48,43 @@ function logout() {
   currentUsername = '';
   localStorage.removeItem('token');
   localStorage.removeItem('username');
+  if (socket) { socket.disconnect(); socket = null; }
   document.getElementById('app-section').style.display = 'none';
   document.getElementById('user-info').style.display = 'none';
   document.getElementById('auth-section').style.display = 'block';
   toast('Logged out', 'info');
+}
+
+function connectSocket() {
+  if (!token) return;
+  socket = io();
+
+  socket.on('connect', () => {
+    socket.emit('authenticate', token);
+    document.getElementById('socket-status').innerHTML = '<span style="color:#2ed573;">🟢 Real-time connected</span>';
+  });
+
+  socket.on('disconnect', () => {
+    document.getElementById('socket-status').innerHTML = '<span style="color:#ff4757;">🔴 Disconnected</span>';
+  });
+
+  socket.on('auth_error', (data) => {
+    toast(data.error, 'error');
+  });
+
+  socket.on('message_received', (data) => {
+    addMessage(data.text || data.message);
+    toast('New message received!', 'info');
+  });
+
+  socket.on('online_count', (data) => {
+    const el = document.getElementById('online-count');
+    if (el) el.textContent = `👥 ${data.count} online`;
+  });
+
+  socket.on('user_joined', () => {
+    toast('A user joined', 'info');
+  });
 }
 
 async function login(e) {
@@ -78,6 +112,7 @@ async function login(e) {
       setAuthUI();
       loadMessages();
       checkStatus();
+      connectSocket();
       toast('Welcome back!', 'success');
     } else {
       errorEl.textContent = data.error || 'Login failed';
@@ -163,8 +198,9 @@ async function sendMessage(e) {
     });
     const data = await res.json();
     if (data.error) { toast(data.error, 'error'); return; }
-    addMessage(data.text || data.message);
+    addMessage(data.text);
     input.value = '';
+    if (socket) socket.emit('new_message', { text: data.text, user_id: data.user_id, id: data.id });
     toast('Message sent!', 'success');
   } catch (err) {
     toast('Failed to send message', 'error');
@@ -188,6 +224,37 @@ async function loadMessages() {
   }
 }
 
+async function searchMessages(e) {
+  e.preventDefault();
+  const q = document.getElementById('search-input').value.trim();
+  const resultsDiv = document.getElementById('search-results');
+  resultsDiv.innerHTML = '';
+  if (!q || q.length < 2) return;
+  try {
+    const res = await fetch(`/api/messages/search?q=${encodeURIComponent(q)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const results = await res.json();
+    if (Array.isArray(results)) {
+      results.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.textContent = m.text;
+        resultsDiv.appendChild(div);
+      });
+      if (results.length === 0) {
+        resultsDiv.innerHTML = '<p style="color:#888;">No results found</p>';
+      }
+    }
+  } catch (err) {
+    toast('Search failed', 'error');
+  }
+}
+
+function clearMessages() {
+  document.getElementById('message-list').innerHTML = '';
+}
+
 function addMessage(text) {
   const list = document.getElementById('message-list');
   const div = document.createElement('div');
@@ -205,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setAuthUI();
     loadMessages();
     checkStatus();
+    connectSocket();
     toast('Session restored!', 'info');
   } else {
     document.getElementById('auth-section').style.display = 'block';

@@ -82,7 +82,10 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/me', authenticateToken, (req, res) => {
-  res.json({ id: req.user.id });
+  db.get('SELECT id, username, created_at FROM users WHERE id = ?', [req.user.id], (err, row) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch profile' });
+    res.json(row);
+  });
 });
 
 router.get('/protected', authenticateToken, (req, res) => {

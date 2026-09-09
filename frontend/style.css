@@ -184,6 +184,15 @@ a:hover {
 .status-indicator.online { background: #2ed573; box-shadow: 0 0 6px #2ed573; }
 .status-indicator.offline { background: #ff4757; box-shadow: 0 0 6px #ff4757; }
 
+.search form {
+  margin-bottom: 8px;
+}
+
+#search-results .msg {
+  background: rgba(46, 213, 115, 0.15);
+  border-left-color: #2ed573;
+}
+
 @media (max-width: 600px) {
   .container { margin: 20px; }
   header h1 { font-size: 1.8rem; }

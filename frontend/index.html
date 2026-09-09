@@ -13,6 +13,7 @@
       <p>Multi-language project with frontend and backend</p>
       <div id="user-info" style="display:none; margin-top:12px;">
         <span style="color:#00d2ff; font-weight:600;" id="display-username"></span>
+        <span id="online-count" style="color:#888; font-size:0.8rem; margin-left:12px;"></span>
         <button onclick="logout()" style="font-size:0.8rem; padding:4px 12px; margin-left:12px;">Logout</button>
       </div>
     </header>
@@ -42,9 +43,10 @@
           <h2>Backend Status</h2>
           <p id="server-status"><span class="status-indicator offline" id="status-dot"></span>Checking...</p>
           <button id="btn-status" onclick="checkStatus()">Check Server</button>
+          <p id="socket-status" style="margin-top:8px; font-size:0.9rem;"></p>
         </section>
         <section class="messages">
-          <h2>Messages</h2>
+          <h2>Messages <button onclick="clearMessages()" style="font-size:0.8rem; padding:4px 12px; margin-left:12px;">Clear All</button></h2>
           <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
           <div id="message-list"></div>
           <form id="message-form" onsubmit="sendMessage(event)">
@@ -53,9 +55,18 @@
             <span id="btn-spinner" class="spinner" style="display:none;"></span>
           </form>
         </section>
+        <section class="search">
+          <h2>Search Messages</h2>
+          <form onsubmit="searchMessages(event)">
+            <input type="text" id="search-input" placeholder="Search..." minlength="2">
+            <button type="submit">Search</button>
+          </form>
+          <div id="search-results" style="margin-top:12px;"></div>
+        </section>
       </section>
     </main>
   </div>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
