@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { validateMessage } = require('../middleware/validation');
+const { authenticateToken } = require('../auth/auth');
 
 router.get('/status', (req, res) => {
   res.json({ status: 'online', time: new Date().toISOString(), uptime: process.uptime() });
