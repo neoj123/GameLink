@@ -1,13 +1,28 @@
 const API = '';
 
+function showError(msg) {
+  const list = document.getElementById('message-list');
+  const div = document.createElement('div');
+  div.className = 'msg error';
+  div.textContent = '⚠️ ' + msg;
+  list.appendChild(div);
+}
+
 async function checkStatus() {
+  const btn = document.getElementById('btn-status');
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
   try {
     const res = await fetch('/api/status');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     document.getElementById('server-status').textContent =
-      `✅ ${data.status} — ${data.time}`;
+      `✅ ${data.status} — ${new Date(data.time).toLocaleTimeString()}`;
   } catch (err) {
     document.getElementById('server-status').textContent = '❌ Server unreachable';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Check Server';
   }
 }
 
@@ -16,7 +31,8 @@ async function sendMessage(e) {
   const input = document.getElementById('message-input');
   const text = input.value.trim();
   if (!text) return;
-
+  const btn = input.parentElement.querySelector('button');
+  btn.disabled = true;
   try {
     const res = await fetch('/api/messages', {
       method: 'POST',
@@ -24,20 +40,24 @@ async function sendMessage(e) {
       body: JSON.stringify({ text })
     });
     const data = await res.json();
-    addMessage(data.message);
+    if (data.error) { showError(data.error); return; }
+    addMessage(data.text);
     input.value = '';
   } catch (err) {
-    alert('Failed to send message');
+    showError('Failed to send message');
+  } finally {
+    btn.disabled = false;
   }
 }
 
 async function loadMessages() {
   try {
     const res = await fetch('/api/messages');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const messages = await res.json();
-    messages.forEach(m => addMessage(m));
+    messages.forEach(m => addMessage(m.text || m.message));
   } catch (err) {
-    console.error('Could not load messages', err);
+    showError('Could not load messages');
   }
 }
 

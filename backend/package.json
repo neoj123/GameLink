@@ -8,9 +8,13 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "sqlite3": "^6.0.1"
   },
-  "keywords": ["backend", "api"],
+  "keywords": [
+    "backend",
+    "api"
+  ],
   "license": "MIT"
 }
