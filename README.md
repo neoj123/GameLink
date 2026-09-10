@@ -1,6 +1,6 @@
-# Fullstack App
+# GameLink
 
-A full-stack application with a **frontend** (HTML, CSS, JavaScript) and **backend** (Node.js, Express).
+Project I wanted to try that's inspired by Discord
 
 ## Project Structure
 
